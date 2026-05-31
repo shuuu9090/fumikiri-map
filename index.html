@@ -67,7 +67,7 @@
     display:flex;gap:8px;flex:1;min-width:200px;max-width:520px;
   }
   .search input{
-    flex:1;padding:9px 12px;
+    flex:1;min-width:0;padding:9px 12px;
     border:1px solid var(--border-strong);border-radius:3px;
     font-size:.86rem;font-family:inherit;
     background:var(--bg);color:var(--text);
@@ -229,7 +229,9 @@
   .leaflet-bar a:hover{background:var(--surface)}
   @media(max-width:720px){
     header{flex-wrap:wrap;height:auto;padding:10px 14px;gap:10px}
-    .search{order:2;max-width:none;flex-basis:100%}
+    .search{order:2;max-width:none;flex-basis:100%;flex-wrap:wrap}
+    .search input{flex:1 1 100%}   /* 入力欄は1行使う */
+    .search button{flex:1 1 auto;justify-content:center} /* SEARCH/LOCATEは下段で半々 */
     .radius{order:1;margin-left:auto}
     main{flex-direction:column}
     aside{width:auto;border-left:none;border-top:1px solid var(--border);max-height:42vh}
