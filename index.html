@@ -268,6 +268,10 @@
   }
   .rp-x:hover{border-color:var(--accent);color:var(--accent)}
   .rp-desc{font-size:.76rem;color:var(--text-dim);line-height:1.6;margin:8px 0 4px}
+  /* 2ステップ:compact=位置調整(地図が見える) / 展開=フォーム入力 */
+  .rp-next{display:none;width:100%;margin-top:4px}
+  .report-panel.compact .rp-body{display:none}
+  .report-panel.compact .rp-next{display:block}
   .modal-coord{font-family:var(--mono);font-size:.72rem;color:#f0a500;margin:2px 0 12px}
   .form-row{display:flex;align-items:center;gap:10px;margin-bottom:9px}
   .form-label{flex:0 0 64px;font-size:.74rem;color:var(--text-dim);letter-spacing:.04em}
@@ -357,6 +361,9 @@
   <p class="rp-desc">📍 ピンを正確な踏切の位置にドラッグして調整してください。</p>
   <div class="modal-coord" id="reportCoord"></div>
 
+  <button class="mini primary rp-next" id="rpNextBtn" type="button">次へ:内容を入力 ▾</button>
+
+  <div class="rp-body">
   <div class="form-row">
     <span class="form-label">種別</span>
     <div class="seg" id="segType" data-val="">
@@ -393,9 +400,11 @@
   </details>
 
   <div class="rp-actions">
+    <button class="mini" id="rpBackBtn" type="button">← 位置を調整</button>
     <button class="mini primary" id="openOsmBtn" type="button">コピーしてOSMを開く</button>
   </div>
   <p class="rp-note">OSMの画面でピン位置を確認し、本文欄に貼り付けて投稿してください(ログイン推奨)。</p>
+  </div>
 </div>
 
 <script>
@@ -726,7 +735,7 @@ const ReportControl = L.Control.extend({
 });
 map.addControl(new ReportControl());
 
-// 報告モード中に地図をタップ → ドラッグ可能なピンを置き、フォームを開く
+// 報告モード中に地図をタップ → ドラッグ可能なピンを置き、まず「位置調整(compact)」で開く
 map.on('click', e=>{
   if(!reportMode) return;
   if(reportMarker) map.removeLayer(reportMarker);
@@ -735,7 +744,9 @@ map.on('click', e=>{
   reportMarker.on('dragend', ev=> setReportLatLng(reportMarker.getLatLng()));
   setReportLatLng(e.latlng);
   setReportMode(false);
+  reportPanel.classList.add('compact');   // 最初は小さく開く=地図が見えてピンをドラッグできる
   reportPanel.hidden = false;
+  map.panTo(e.latlng, {animate:true});     // ピンを見える位置へ寄せる
 });
 
 function closeReport(){
@@ -743,6 +754,12 @@ function closeReport(){
   if(reportMarker){ map.removeLayer(reportMarker); reportMarker = null; }
 }
 document.getElementById('closeReportBtn').addEventListener('click', closeReport);
+// ステップ切替:位置調整 ⇄ 内容入力
+document.getElementById('rpNextBtn').addEventListener('click', ()=>{ reportPanel.classList.remove('compact'); });
+document.getElementById('rpBackBtn').addEventListener('click', ()=>{
+  reportPanel.classList.add('compact');
+  if(reportLatLng) map.panTo(reportLatLng, {animate:true}); // 調整に戻ったらまたピンへ寄せる
+});
 
 // 「コピーしてOSMを開く」:生成メモをクリップボードへ→OSMノート画面を該当地点で開く
 document.getElementById('openOsmBtn').addEventListener('click', async ()=>{
