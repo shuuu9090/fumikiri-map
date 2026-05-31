@@ -243,7 +243,7 @@
 <header>
   <div class="logo"><span class="mark"></span>FUMIKIRI&nbsp;MAP <span class="sub">踏切探索</span></div>
   <div class="search">
-    <input id="q" type="text" placeholder="駅名・地名を入力(例:荻窪駅、杉並区)" />
+    <input id="q" type="text" placeholder="駅名・地名を入力(例:東京駅、千代田区)" />
     <button id="go">Search</button>
     <button id="locate" class="ghost" title="現在地から踏切を探す">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
@@ -271,7 +271,7 @@
 </main>
 
 <script>
-const map = L.map('map', {zoomControl:true}).setView([35.7045, 139.6206], 14); // 荻窪あたり
+const map = L.map('map', {zoomControl:true}).setView([35.6812, 139.7671], 14); // 東京駅あたり
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
   maxZoom:19, subdomains:'abcd', attribution:'© OpenStreetMap © CARTO'
 }).addTo(map);
