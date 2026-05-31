@@ -252,37 +252,62 @@
     background:#f0a500;border:2px solid #fff3d6;
     box-shadow:0 0 0 4px rgba(240,165,0,.22),0 0 12px 2px rgba(240,165,0,.55);
   }
-  /* モーダル */
-  .modal{
-    position:fixed;inset:0;z-index:2000;
-    background:rgba(5,7,10,.6);backdrop-filter:blur(2px);
-    display:grid;place-items:center;padding:18px;
+  /* 報告パネル(地図はパネルの上で操作=ピンをドラッグできる) */
+  .report-panel{
+    position:fixed;left:0;right:0;bottom:0;z-index:2000;
+    background:var(--surface);border-top:1px solid var(--border-strong);
+    box-shadow:0 -8px 32px rgba(0,0,0,.55);
+    padding:14px 16px calc(14px + env(safe-area-inset-bottom));
+    max-height:72vh;overflow-y:auto;
   }
-  .modal[hidden]{display:none}
-  .modal-box{
-    width:100%;max-width:440px;background:var(--surface);
-    border:1px solid var(--border-strong);border-radius:6px;
-    padding:18px;box-shadow:0 16px 48px rgba(0,0,0,.6);
+  .report-panel[hidden]{display:none}
+  .rp-title{font-size:.92rem;font-weight:600;letter-spacing:.06em;display:flex;align-items:center;justify-content:space-between}
+  .rp-x{
+    background:transparent;border:1px solid var(--border-strong);border-radius:3px;
+    color:var(--text-dim);font:inherit;font-size:.8rem;cursor:pointer;padding:2px 9px;
   }
-  .modal-title{font-size:.95rem;font-weight:600;letter-spacing:.06em;margin-bottom:8px}
-  .modal-desc{font-size:.78rem;color:var(--text-dim);line-height:1.7;margin-bottom:12px}
-  .modal-box textarea{
-    width:100%;background:var(--bg);color:var(--text);
-    border:1px solid var(--border-strong);border-radius:4px;
-    padding:10px;font-family:inherit;font-size:.82rem;line-height:1.6;resize:vertical;
+  .rp-x:hover{border-color:var(--accent);color:var(--accent)}
+  .rp-desc{font-size:.76rem;color:var(--text-dim);line-height:1.6;margin:8px 0 4px}
+  .modal-coord{font-family:var(--mono);font-size:.72rem;color:#f0a500;margin:2px 0 12px}
+  .form-row{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+  .form-label{flex:0 0 64px;font-size:.74rem;color:var(--text-dim);letter-spacing:.04em}
+  .form-label .opt{color:var(--text-faint);font-size:.66rem}
+  .form-row input[type=text]{
+    flex:1;min-width:0;background:var(--bg);color:var(--text);
+    border:1px solid var(--border-strong);border-radius:3px;
+    padding:8px 10px;font-family:inherit;font-size:.84rem;
   }
-  .modal-box textarea:focus{outline:none;border-color:var(--accent)}
-  .modal-coord{font-family:var(--mono);font-size:.72rem;color:var(--text-faint);margin:8px 0 14px}
-  .modal-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-  .modal-actions .mini{
-    font:inherit;font-size:.7rem;font-weight:600;letter-spacing:.06em;
+  .form-row input[type=text]:focus{outline:none;border-color:var(--accent)}
+  .seg{display:flex;gap:6px}
+  .seg button{
+    font:inherit;font-size:.74rem;font-weight:600;
     background:transparent;color:var(--text-dim);
     border:1px solid var(--border-strong);border-radius:3px;
-    padding:8px 12px;cursor:pointer;transition:border-color .14s,color .14s,background .14s;
+    padding:7px 14px;cursor:pointer;transition:border-color .14s,color .14s,background .14s;
   }
-  .modal-actions .mini:hover{border-color:var(--accent);color:var(--accent)}
-  .modal-actions .mini.primary{background:rgba(77,163,255,.14);border-color:var(--accent-dim);color:var(--accent)}
-  .modal-actions .mini.primary:hover{background:rgba(77,163,255,.24);border-color:var(--accent)}
+  .seg button:hover{border-color:var(--accent)}
+  .seg button.sel{background:rgba(77,163,255,.16);border-color:var(--accent);color:var(--accent)}
+  .rp-preview{margin:8px 0 12px}
+  .rp-preview summary{font-size:.72rem;color:var(--text-dim);cursor:pointer;letter-spacing:.04em}
+  .rp-preview textarea{
+    width:100%;margin-top:8px;background:var(--bg);color:var(--text);
+    border:1px solid var(--border-strong);border-radius:4px;
+    padding:10px;font-family:inherit;font-size:.8rem;line-height:1.6;resize:vertical;
+  }
+  .rp-actions{display:flex;gap:8px;justify-content:flex-end}
+  .mini{
+    font:inherit;font-size:.72rem;font-weight:600;letter-spacing:.06em;
+    background:transparent;color:var(--text-dim);
+    border:1px solid var(--border-strong);border-radius:3px;
+    padding:9px 14px;cursor:pointer;transition:border-color .14s,color .14s,background .14s;
+  }
+  .mini:hover{border-color:var(--accent);color:var(--accent)}
+  .mini.primary{background:rgba(77,163,255,.16);border-color:var(--accent-dim);color:var(--accent)}
+  .mini.primary:hover{background:rgba(77,163,255,.26);border-color:var(--accent)}
+  .rp-note{font-size:.68rem;color:var(--text-faint);line-height:1.6;margin-top:10px}
+  @media(min-width:721px){
+    .report-panel{left:auto;right:16px;bottom:16px;width:380px;border:1px solid var(--border-strong);border-radius:8px}
+  }
   @media(max-width:720px){
     header{flex-wrap:wrap;height:auto;padding:10px 14px;gap:10px}
     .search{order:2;max-width:none;flex-basis:100%;flex-wrap:wrap}
@@ -327,18 +352,50 @@
   </aside>
 </main>
 
-<div class="modal" id="reportModal" hidden>
-  <div class="modal-box">
-    <div class="modal-title">この場所の踏切を報告</div>
-    <p class="modal-desc">タップした地点で OpenStreetMap にノートを報告できます。<br>下の文をコピーし、OSMの画面でマーカー位置を確認して貼り付け、投稿してください(ログイン推奨)。地元のマッパーが地図に反映してくれます。</p>
-    <textarea id="reportText" rows="6" spellcheck="false"></textarea>
-    <div class="modal-coord" id="reportCoord"></div>
-    <div class="modal-actions">
-      <button class="mini" id="copyTplBtn" type="button">テンプレをコピー</button>
-      <button class="mini primary" id="openOsmBtn" type="button">OSMでノートを開く</button>
-      <button class="mini" id="closeReportBtn" type="button">閉じる</button>
+<div class="report-panel" id="reportModal" hidden>
+  <div class="rp-title">踏切を報告 <button class="rp-x" id="closeReportBtn" type="button" title="閉じる">✕</button></div>
+  <p class="rp-desc">📍 ピンを正確な踏切の位置にドラッグして調整してください。</p>
+  <div class="modal-coord" id="reportCoord"></div>
+
+  <div class="form-row">
+    <span class="form-label">種別</span>
+    <div class="seg" id="segType" data-val="">
+      <button type="button" data-v="歩行者用">歩行者用</button>
+      <button type="button" data-v="車道用">車道用</button>
     </div>
   </div>
+  <div class="form-row">
+    <span class="form-label">路線</span>
+    <input type="text" id="fLine" placeholder="例:西武新宿線" />
+  </div>
+  <div class="form-row">
+    <span class="form-label">遮断機</span>
+    <div class="seg" id="segBarrier" data-val="">
+      <button type="button" data-v="有">有</button>
+      <button type="button" data-v="無">無</button>
+    </div>
+  </div>
+  <div class="form-row">
+    <span class="form-label">警報機</span>
+    <div class="seg" id="segBell" data-val="">
+      <button type="button" data-v="有">有</button>
+      <button type="button" data-v="無">無</button>
+    </div>
+  </div>
+  <div class="form-row">
+    <span class="form-label">踏切名 <span class="opt">任意</span></span>
+    <input type="text" id="fName" placeholder="例:第三踏切(標識にあれば)" />
+  </div>
+
+  <details class="rp-preview">
+    <summary>OSMに送るメモを確認</summary>
+    <textarea id="reportText" rows="7" readonly></textarea>
+  </details>
+
+  <div class="rp-actions">
+    <button class="mini primary" id="openOsmBtn" type="button">コピーしてOSMを開く</button>
+  </div>
+  <p class="rp-note">OSMの画面でピン位置を確認し、本文欄に貼り付けて投稿してください(ログイン推奨)。</p>
 </div>
 
 <script>
@@ -599,18 +656,14 @@ qEl.addEventListener('keydown', e=>{ if(e.key==='Enter') search(); });
 radiusEl.addEventListener('input', ()=>{ radiusValEl.textContent = radiusEl.value + ' km'; }); // 表示を即時更新
 radiusEl.addEventListener('change', scheduleReSearch); // 指を離したら再検索(デバウンス+連打防止)
 
-// ---- OSMへ「踏切がない」報告(地点タップ方式) ----
-// アプリからは書き込まず、OSM公式のノート投稿画面を該当地点で開く(スパム責任なし・キー不要)
-const REPORT_TEMPLATE =
-`ここに踏切があります。
-種別:歩行者用 / 車道用(どちらか)
-路線:◯◯線
-遮断機:有 / 無 ・ 警報機:有 / 無
-踏切名:◯◯踏切(標識にあれば)`;
+// ---- OSMへ「踏切がない」報告(地点タップ→ピン微調整→フォーム) ----
+// アプリからは書き込まず、生成したメモをコピーしてOSM公式のノート投稿画面を該当地点で開く
 const reportHintEl = document.getElementById('reportHint');
-const reportModal = document.getElementById('reportModal');
+const reportPanel = document.getElementById('reportModal');
 const reportText = document.getElementById('reportText');
 const reportCoord = document.getElementById('reportCoord');
+const fLine = document.getElementById('fLine');
+const fName = document.getElementById('fName');
 let reportMode = false;
 let reportMarker = null;
 let reportLatLng = null;
@@ -621,9 +674,40 @@ function setReportMode(on){
   reportHintEl.classList.toggle('on', on);
   if(reportCtrlBtn){
     reportCtrlBtn.classList.toggle('on', on);
-    reportCtrlBtn.textContent = on ? 'タップで指定中…(キャンセル)' : '＋ 踏切を報告';
+    reportCtrlBtn.textContent = on ? 'タップで位置を指定…(キャンセル)' : '＋ 踏切を報告';
   }
   map.getContainer().style.cursor = on ? 'crosshair' : '';
+}
+
+// セグメント選択(種別/遮断機/警報機)。選択値は親要素の data-val に保持
+function segValue(id){ return document.getElementById(id).dataset.val || ''; }
+document.querySelectorAll('.seg').forEach(seg=>{
+  seg.addEventListener('click', e=>{
+    const btn = e.target.closest('button'); if(!btn) return;
+    seg.dataset.val = btn.dataset.v;
+    seg.querySelectorAll('button').forEach(b=>b.classList.toggle('sel', b===btn));
+    refreshNote();
+  });
+});
+
+// フォーム+座標 → OSMノート本文を生成
+function buildNote(){
+  const lines = ['ここに踏切があります(踏切マップからの報告)。'];
+  const type = segValue('segType'); if(type) lines.push('種別:' + type);
+  const line = fLine.value.trim();  if(line) lines.push('路線:' + line);
+  const bar = segValue('segBarrier'); if(bar) lines.push('遮断機:' + bar);
+  const bell = segValue('segBell');    if(bell) lines.push('警報機:' + bell);
+  const nm = fName.value.trim();    if(nm) lines.push('踏切名:' + nm);
+  if(reportLatLng) lines.push(`位置:${reportLatLng.lat.toFixed(5)}, ${reportLatLng.lng.toFixed(5)}`);
+  return lines.join('\n');
+}
+function refreshNote(){ reportText.value = buildNote(); }
+[fLine, fName].forEach(el=> el.addEventListener('input', refreshNote));
+
+function setReportLatLng(ll){
+  reportLatLng = ll;
+  reportCoord.textContent = `📍 ${ll.lat.toFixed(5)}, ${ll.lng.toFixed(5)}`;
+  refreshNote();
 }
 
 // 地図上のコントロールボタン
@@ -642,33 +726,30 @@ const ReportControl = L.Control.extend({
 });
 map.addControl(new ReportControl());
 
-// 報告モード中に地図をタップ → 地点を確定してモーダルを開く
+// 報告モード中に地図をタップ → ドラッグ可能なピンを置き、フォームを開く
 map.on('click', e=>{
   if(!reportMode) return;
-  reportLatLng = e.latlng;
   if(reportMarker) map.removeLayer(reportMarker);
-  reportMarker = L.marker(e.latlng, {icon:reportIcon}).addTo(map);
+  reportMarker = L.marker(e.latlng, {icon:reportIcon, draggable:true}).addTo(map);
+  reportMarker.on('drag', ev=> setReportLatLng(ev.latlng));     // ドラッグで位置を微調整
+  reportMarker.on('dragend', ev=> setReportLatLng(reportMarker.getLatLng()));
+  setReportLatLng(e.latlng);
   setReportMode(false);
-  reportText.value = REPORT_TEMPLATE;
-  reportCoord.textContent = `位置: ${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`;
-  reportModal.hidden = false;
+  reportPanel.hidden = false;
 });
 
 function closeReport(){
-  reportModal.hidden = true;
+  reportPanel.hidden = true;
   if(reportMarker){ map.removeLayer(reportMarker); reportMarker = null; }
 }
 document.getElementById('closeReportBtn').addEventListener('click', closeReport);
-reportModal.addEventListener('click', e=>{ if(e.target === reportModal) closeReport(); }); // 背景クリックで閉じる
-document.getElementById('copyTplBtn').addEventListener('click', async ()=>{
-  try{ await navigator.clipboard.writeText(reportText.value); }
-  catch(e){ reportText.select(); document.execCommand && document.execCommand('copy'); }
-  const b = document.getElementById('copyTplBtn');
-  const t = b.textContent; b.textContent = 'コピーしました';
-  setTimeout(()=>{ b.textContent = t; }, 1500);
-});
-document.getElementById('openOsmBtn').addEventListener('click', ()=>{
+
+// 「コピーしてOSMを開く」:生成メモをクリップボードへ→OSMノート画面を該当地点で開く
+document.getElementById('openOsmBtn').addEventListener('click', async ()=>{
   if(!reportLatLng) return;
+  const note = buildNote();
+  try{ await navigator.clipboard.writeText(note); }
+  catch(e){ reportText.removeAttribute('readonly'); reportText.select(); try{document.execCommand('copy');}catch(_){} reportText.setAttribute('readonly',''); }
   const url = `https://www.openstreetmap.org/note/new#map=18/${reportLatLng.lat.toFixed(5)}/${reportLatLng.lng.toFixed(5)}&layers=N`;
   window.open(url, '_blank', 'noopener');
 });
