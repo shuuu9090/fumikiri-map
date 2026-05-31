@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FUMIKIRI MAP</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0a0d12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="踏切マップ">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  :root{
+    --bg:#0a0d12;
+    --surface:#0e1219;
+    --surface-2:#141a23;
+    --border:#1f2733;
+    --border-strong:#2b3543;
+    --text:#e6edf3;
+    --text-dim:#8b97a7;
+    --text-faint:#5c6675;
+    --accent:#4da3ff;
+    --accent-dim:#2f6dbf;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Inter","Segoe UI","Hiragino Kaku Gothic ProN",system-ui,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+    font-size:14px;
+  }
+  header{
+    background:var(--surface);
+    padding:0 18px;
+    height:54px;
+    display:flex;
+    align-items:center;
+    gap:18px;
+    flex-wrap:nowrap;
+    border-bottom:1px solid var(--border);
+  }
+  .logo{
+    display:flex;align-items:center;gap:10px;
+    white-space:nowrap;
+    font-size:.78rem;font-weight:600;
+    letter-spacing:.22em;text-transform:uppercase;
+    color:var(--text);
+  }
+  .logo .mark{
+    width:9px;height:9px;
+    background:var(--accent);
+    transform:rotate(45deg);
+    box-shadow:0 0 10px 1px rgba(77,163,255,.7);
+  }
+  .logo .sub{color:var(--text-faint);font-weight:500;letter-spacing:.18em}
+  .search{
+    display:flex;gap:8px;flex:1;min-width:200px;max-width:520px;
+  }
+  .search input{
+    flex:1;padding:9px 12px;
+    border:1px solid var(--border-strong);border-radius:3px;
+    font-size:.86rem;font-family:inherit;
+    background:var(--bg);color:var(--text);
+    transition:border-color .15s,box-shadow .15s;
+  }
+  .search input::placeholder{color:var(--text-faint)}
+  .search input:focus{
+    outline:none;border-color:var(--accent);
+    box-shadow:0 0 0 3px rgba(77,163,255,.12);
+  }
+  .search button{
+    padding:9px 18px;border:1px solid var(--accent-dim);border-radius:3px;cursor:pointer;
+    font-size:.74rem;font-weight:600;font-family:inherit;
+    letter-spacing:.12em;text-transform:uppercase;
+    background:rgba(77,163,255,.12);color:var(--accent);
+    transition:background .15s,border-color .15s;
+    white-space:nowrap;
+  }
+  .search button:hover{background:rgba(77,163,255,.2);border-color:var(--accent)}
+  .search button:active{background:rgba(77,163,255,.28)}
+  .search button:disabled{opacity:.4;cursor:wait}
+  .search button.ghost{
+    background:transparent;border-color:var(--border-strong);color:var(--text-dim);
+    display:inline-flex;align-items:center;gap:7px;padding:9px 13px;
+  }
+  .search button.ghost:hover{border-color:var(--accent);color:var(--accent);background:rgba(77,163,255,.06)}
+  .search button.ghost svg{display:block}
+  .radius{
+    display:flex;align-items:center;gap:12px;white-space:nowrap;
+    color:var(--text-dim);
+    font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;
+    margin-left:auto;
+  }
+  .radius .val{font-family:var(--mono);color:var(--accent);font-size:.82rem;letter-spacing:0;min-width:3.2em;text-align:right}
+  .radius input[type=range]{
+    width:160px;accent-color:var(--accent);cursor:pointer;
+  }
+  main{flex:1;display:flex;min-height:0}
+  #map{position:absolute;inset:0;background:var(--bg)}
+  aside{
+    width:340px;background:var(--surface);
+    border-left:1px solid var(--border);
+    display:flex;flex-direction:column;
+  }
+  .panel-head{
+    padding:13px 16px;
+    font-size:.7rem;font-weight:600;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--text-dim);
+    border-bottom:1px solid var(--border);
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .count{
+    font-family:var(--mono);font-size:.82rem;letter-spacing:0;
+    color:var(--accent);
+    border:1px solid var(--border-strong);border-radius:3px;
+    padding:1px 9px;
+  }
+  .list{flex:1;overflow-y:auto;padding:8px}
+  .card{
+    background:var(--surface-2);
+    border:1px solid var(--border);border-radius:4px;
+    padding:11px 13px;margin-bottom:7px;cursor:pointer;
+    transition:border-color .14s,background .14s;
+  }
+  .card:hover{border-color:var(--accent-dim);background:#171f2b}
+  .card.active{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+  .card .name{
+    font-weight:500;font-size:.9rem;color:var(--text);
+    display:flex;align-items:center;gap:8px;
+  }
+  .card .name::before{
+    content:"";width:7px;height:7px;flex:0 0 auto;
+    background:var(--accent);transform:rotate(45deg);
+    box-shadow:0 0 6px rgba(77,163,255,.6);
+  }
+  .card .name .type{
+    margin-left:auto;flex:0 0 auto;
+    font-size:.6rem;font-weight:600;letter-spacing:.1em;
+    padding:2px 7px;border-radius:3px;
+    border:1px solid var(--border-strong);color:var(--text-dim);
+  }
+  .card .name .type.ped{border-color:var(--accent-dim);color:var(--accent)}
+  .card .line{
+    font-size:.76rem;color:var(--accent);margin:6px 0 0;padding-left:15px;
+    display:flex;align-items:center;gap:7px;
+  }
+  .card .line::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--accent-dim);flex:0 0 auto}
+  .card .meta{
+    font-family:var(--mono);font-size:.72rem;color:var(--text-faint);
+    margin:5px 0 10px;letter-spacing:.02em;padding-left:15px;
+  }
+  .card .links{display:flex;gap:6px}
+  .card .links a{
+    flex:1;text-align:center;text-decoration:none;
+    font-size:.66rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+    padding:7px 4px;border-radius:3px;
+    border:1px solid var(--border-strong);
+    color:var(--text-dim);
+    transition:border-color .14s,color .14s,background .14s;
+  }
+  .card .links a:hover{border-color:var(--accent);color:var(--accent);background:rgba(77,163,255,.08)}
+  .empty{
+    padding:40px 22px;text-align:center;color:var(--text-faint);
+    line-height:1.8;font-size:.82rem;
+  }
+  .empty .big{
+    display:block;width:14px;height:14px;margin:0 auto 16px;
+    border:1px solid var(--border-strong);transform:rotate(45deg);
+  }
+  .loading{
+    position:absolute;inset:0;background:rgba(10,13,18,.7);
+    backdrop-filter:blur(2px);
+    display:none;place-items:center;z-index:1000;
+    font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:var(--text-dim);
+  }
+  .loading.on{display:grid}
+  .spin{
+    width:34px;height:34px;border:2px solid var(--border-strong);border-top-color:var(--accent);
+    border-radius:50%;animation:s .9s linear infinite;margin:0 auto 14px;
+  }
+  @keyframes s{to{transform:rotate(360deg)}}
+  /* 現在地ピン(踏切=ダイヤ型と区別するため丸型) */
+  .you{
+    width:12px;height:12px;border-radius:50%;
+    background:#e6edf3;border:2px solid var(--accent);
+    box-shadow:0 0 0 4px rgba(77,163,255,.2),0 0 12px 2px rgba(77,163,255,.45);
+  }
+  /* map marker — 車道用(塗りダイヤ) */
+  .xing{
+    width:11px;height:11px;background:var(--accent);
+    transform:rotate(45deg);border:1px solid #cfe4ff;
+    box-shadow:0 0 0 4px rgba(77,163,255,.16),0 0 12px 2px rgba(77,163,255,.5);
+  }
+  /* 歩行者用(中抜きダイヤ)で区別 */
+  .xing.ped{
+    background:transparent;border:1.5px solid var(--accent);
+    box-shadow:0 0 0 3px rgba(77,163,255,.1),0 0 8px 1px rgba(77,163,255,.4);
+  }
+  /* leaflet popup -> dark */
+  .leaflet-popup-content-wrapper{
+    background:var(--surface-2);color:var(--text);
+    border:1px solid var(--border-strong);border-radius:4px;box-shadow:0 8px 24px rgba(0,0,0,.5);
+  }
+  .leaflet-popup-tip{background:var(--surface-2);border:1px solid var(--border-strong)}
+  .leaflet-popup-content{font-family:inherit;margin:11px 13px}
+  .leaflet-container a.leaflet-popup-close-button{color:var(--text-faint)}
+  .pop b{font-size:.86rem;font-weight:500;display:flex;align-items:center;gap:8px}
+  .pop b::before{content:"";width:7px;height:7px;background:var(--accent);transform:rotate(45deg)}
+  .pop .pop-line{color:var(--accent);font-size:.74rem;margin-top:3px}
+  .pop .pop-type{color:var(--text-dim);font-size:.7rem;margin-top:2px}
+  .pop a{
+    display:block;margin-top:8px;color:var(--accent);
+    font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;font-weight:600;
+  }
+  .pop a:hover{text-decoration:underline}
+  .leaflet-control-attribution{background:rgba(10,13,18,.7)!important;color:var(--text-faint)!important}
+  .leaflet-control-attribution a{color:var(--text-dim)!important}
+  .leaflet-bar a{background:var(--surface-2);color:var(--text);border-color:var(--border)}
+  .leaflet-bar a:hover{background:var(--surface)}
+  @media(max-width:720px){
+    header{flex-wrap:wrap;height:auto;padding:10px 14px;gap:10px}
+    .search{order:2;max-width:none;flex-basis:100%}
+    .radius{order:1;margin-left:auto}
+    main{flex-direction:column}
+    aside{width:auto;border-left:none;border-top:1px solid var(--border);max-height:42vh}
+    #map{min-height:0;flex:1}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><span class="mark"></span>FUMIKIRI&nbsp;MAP <span class="sub">踏切探索</span></div>
+  <div class="search">
+    <input id="q" type="text" placeholder="駅名・地名を入力(例:荻窪駅、杉並区)" />
+    <button id="go">Search</button>
+    <button id="locate" class="ghost" title="現在地から踏切を探す">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <circle cx="12" cy="12" r="7"/><line x1="12" y1="1" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="23"/><line x1="1" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="23" y2="12"/>
+      </svg>Locate
+    </button>
+  </div>
+  <div class="radius">
+    <label for="radius">Radius</label>
+    <input id="radius" type="range" min="1" max="5" step="1" value="2" />
+    <span class="val" id="radiusVal">2 km</span>
+  </div>
+</header>
+<main>
+  <div style="flex:1;position:relative">
+    <div id="map"></div>
+    <div class="loading" id="loading"><div><div class="spin"></div>Scanning…</div></div>
+  </div>
+  <aside>
+    <div class="panel-head"><span>Crossings</span> <span class="count" id="count">0</span></div>
+    <div class="list" id="list">
+      <div class="empty"><span class="big"></span>地名を検索すると、周辺の踏切を抽出します。<br>カードを選択すると地図が移動します。</div>
+    </div>
+  </aside>
+</main>
+
+<script>
+const map = L.map('map', {zoomControl:true}).setView([35.7045, 139.6206], 14); // 荻窪あたり
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+  maxZoom:19, subdomains:'abcd', attribution:'© OpenStreetMap © CARTO'
+}).addTo(map);
+
+const crossingIcon = L.divIcon({ // 車道用
+  className:'',
+  html:'<div class="xing"></div>',
+  iconSize:[11,11], iconAnchor:[6,6]
+});
+const pedIcon = L.divIcon({ // 歩行者用
+  className:'',
+  html:'<div class="xing ped"></div>',
+  iconSize:[11,11], iconAnchor:[6,6]
+});
+const youIcon = L.divIcon({
+  className:'',
+  html:'<div class="you"></div>',
+  iconSize:[12,12], iconAnchor:[6,6]
+});
+
+let markers = [];
+let youMarker = null; // 現在地ピン
+const listEl = document.getElementById('list');
+const countEl = document.getElementById('count');
+const loadingEl = document.getElementById('loading');
+const qEl = document.getElementById('q');
+const goBtn = document.getElementById('go');
+const locateBtn = document.getElementById('locate');
+const radiusEl = document.getElementById('radius');
+const radiusValEl = document.getElementById('radiusVal');
+
+let lastCenter = null; // スライダー変更時の再検索に使う
+
+// ---- 外部API保護(連打抑制・キャッシュ) ----
+// ※ 完全クライアントサイドのため、これは「アプリ自身の通信量を抑える」対策。
+//    ボットはJSを通さず直接APIを叩けるので、根本対策にはサーバ側プロキシが必要。
+let inFlight = false;             // 同時実行を1本に制限
+let lastReqAt = 0;                // 直近のネット呼び出し時刻
+const MIN_GAP = 1100;             // ネット呼び出しの最小間隔(ms)。Nominatim/Overpassのポリシー順守
+const geoCache  = new Map();      // 地名 → 座標
+const xingCache = new Map();      // "lat,lon,radius" → 踏切配列
+const sleep = ms => new Promise(r=>setTimeout(r, ms));
+// 直近の呼び出しから MIN_GAP 以上空ける(キャッシュヒット時は呼ばれない)
+async function throttle(){
+  const wait = MIN_GAP - (Date.now() - lastReqAt);
+  if(wait > 0) await sleep(wait);
+  lastReqAt = Date.now();
+}
+
+function setLoading(on){ loadingEl.classList.toggle('on', on); goBtn.disabled = on; locateBtn.disabled = on; }
+function currentRadius(){ return parseInt(radiusEl.value, 10) * 1000; } // m
+
+// 地名 → 緯度経度 (Nominatim)
+async function geocode(name){
+  const key = name.toLowerCase();
+  if(geoCache.has(key)) return geoCache.get(key); // セッション内キャッシュ
+  await throttle();
+  const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=jp&q=${encodeURIComponent(name)}`;
+  const r = await fetch(url, {headers:{'Accept-Language':'ja'}});
+  const d = await r.json();
+  const geo = d.length ? {lat:parseFloat(d[0].lat), lon:parseFloat(d[0].lon), label:d[0].display_name} : null;
+  if(geo) geoCache.set(key, geo); // 見つかった場合のみキャッシュ(未発見は再試行を許す)
+  return geo;
+}
+
+// 中心点の周りの踏切を取得 (Overpass)
+// level_crossing = 車道と線路の踏切 / crossing = 歩行者用の踏切
+async function fetchCrossings(lat, lon, radius=2000){
+  const cacheKey = `${lat.toFixed(4)},${lon.toFixed(4)},${radius}`;
+  if(xingCache.has(cacheKey)) return xingCache.get(cacheKey); // 同一中心+半径は再取得しない
+  await throttle();
+  const query = `[out:json][timeout:25];
+    (
+      node["railway"="level_crossing"](around:${radius},${lat},${lon});
+      node["railway"="crossing"](around:${radius},${lat},${lon});
+    )->.x;
+    .x out body;
+    way(bn.x)["railway"];
+    out body;`;
+  const r = await fetch('https://overpass-api.de/api/interpreter',{
+    method:'POST', body:'data='+encodeURIComponent(query)
+  });
+  const d = await r.json();
+  const els = d.elements || [];
+  const nodes = els.filter(e=>e.type==='node'); // 踏切
+  const ways  = els.filter(e=>e.type==='way');  // 通っている鉄道路線
+  // 各踏切ノードに、それが乗っている鉄道wayの路線名を集約して付与
+  const lineByNode = {};
+  ways.forEach(w=>{
+    const t = w.tags || {};
+    const nm = t.name || t.ref;
+    if(!nm || !w.nodes) return;
+    w.nodes.forEach(nid=>{
+      (lineByNode[nid] = lineByNode[nid] || new Set()).add(nm);
+    });
+  });
+  nodes.forEach(n=>{
+    const s = lineByNode[n.id];
+    n._line = s ? Array.from(s).join(' / ') : '';
+  });
+  xingCache.set(cacheKey, nodes);
+  return nodes;
+}
+
+function clearMarkers(){ markers.forEach(m=>map.removeLayer(m)); markers=[]; }
+
+function esc(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function streetViewUrl(lat,lon){
+  return `https://www.google.com/maps?q=&layer=c&cbll=${lat},${lon}`;
+}
+function mapsUrl(lat,lon){
+  return `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
+}
+
+function render(elements, center){
+  clearMarkers();
+  listEl.innerHTML='';
+  countEl.textContent = elements.length;
+
+  if(!elements.length){
+    listEl.innerHTML='<div class="empty"><span class="big"></span>このエリアでは踏切が見つかりませんでした。<br>別の地名を試すか、Radius を広げてください。</div>';
+    return;
+  }
+
+  // 中心からの距離でソート
+  elements.forEach(e=>{
+    e._d = Math.hypot(e.lat-center.lat, e.lon-center.lon);
+  });
+  elements.sort((a,b)=>a._d-b._d);
+
+  elements.forEach((e,i)=>{
+    const ped = !!(e.tags && e.tags.railway === 'crossing'); // 歩行者用か
+    const typeLabel = ped ? '歩行者用' : '車道用';
+    const crossName = (e.tags && e.tags.name) ? e.tags.name : ''; // 踏切名(OSM登録時のみ)
+    const lineName = e._line || '';                              // 路線名
+    const title = esc(crossName || `踏切 ${i+1}`);
+    const lineRow = lineName ? `<div class="line">${esc(lineName)}</div>` : '';
+    const km = (e._d*111).toFixed(1); // ざっくり距離
+
+    const m = L.marker([e.lat,e.lon],{icon: ped ? pedIcon : crossingIcon}).addTo(map);
+    m.bindPopup(`<div class="pop"><b>${title}</b>
+      ${lineName ? `<div class="pop-line">${esc(lineName)}</div>` : ''}
+      <div class="pop-type">${typeLabel}の踏切</div>
+      <a href="${streetViewUrl(e.lat,e.lon)}" target="_blank">Street View</a>
+      <a href="${mapsUrl(e.lat,e.lon)}" target="_blank">Map</a></div>`);
+    markers.push(m);
+
+    const card = document.createElement('div');
+    card.className='card';
+    card.innerHTML=`<div class="name">${title}<span class="type${ped?' ped':''}">${typeLabel}</span></div>
+      ${lineRow}
+      <div class="meta">${km} km from center · ${e.lat.toFixed(4)}, ${e.lon.toFixed(4)}</div>
+      <div class="links">
+        <a class="a-sv" href="${streetViewUrl(e.lat,e.lon)}" target="_blank">Street View</a>
+        <a class="a-map" href="${mapsUrl(e.lat,e.lon)}" target="_blank">Map</a>
+      </div>`;
+    card.addEventListener('click', ev=>{
+      if(ev.target.tagName==='A') return;
+      document.querySelectorAll('.card.active').forEach(c=>c.classList.remove('active'));
+      card.classList.add('active');
+      map.setView([e.lat,e.lon],17,{animate:true});
+      m.openPopup();
+    });
+    listEl.appendChild(card);
+  });
+
+  // 全踏切が入るように地図調整
+  const group = L.featureGroup(markers);
+  map.fitBounds(group.getBounds().pad(0.2));
+}
+
+async function search(){
+  const name = qEl.value.trim();
+  if(!name || inFlight) return; // 入力なし/実行中は弾く
+  inFlight = true; setLoading(true);
+  try{
+    const geo = await geocode(name);
+    if(!geo){ alert('その地名が見つかりませんでした。別の言い方で試してください。'); return; }
+    const center = {lat:geo.lat, lon:geo.lon};
+    lastCenter = center;
+    map.setView([center.lat,center.lon],14);
+    const els = await fetchCrossings(center.lat, center.lon, currentRadius());
+    render(els, center);
+  }catch(err){
+    alert('検索中にエラーが起きました。少し待って再度お試しください。\n'+err.message);
+  }finally{
+    inFlight = false; setLoading(false);
+  }
+}
+
+// スライダーを動かしたら、直前に検索した地点で半径だけ変えて再検索
+async function reSearch(){
+  if(!lastCenter || inFlight) return;
+  inFlight = true; setLoading(true);
+  try{
+    const els = await fetchCrossings(lastCenter.lat, lastCenter.lon, currentRadius());
+    render(els, lastCenter);
+  }catch(err){
+    alert('検索中にエラーが起きました。少し待って再度お試しください。\n'+err.message);
+  }finally{
+    inFlight = false; setLoading(false);
+  }
+}
+// 連続でスライダーを離したときの無駄打ちを防ぐデバウンス
+let reSearchTimer = null;
+function scheduleReSearch(){ clearTimeout(reSearchTimer); reSearchTimer = setTimeout(reSearch, 350); }
+
+// Geolocation API を Promise でラップ
+function getPosition(){
+  return new Promise((resolve, reject)=>{
+    if(!navigator.geolocation){ reject(new Error('この端末では現在地を取得できません。')); return; }
+    navigator.geolocation.getCurrentPosition(
+      p=>resolve({lat:p.coords.latitude, lon:p.coords.longitude}),
+      err=>reject(err),
+      {enableHighAccuracy:true, timeout:10000, maximumAge:60000}
+    );
+  });
+}
+
+// 現在地から踏切を探す
+async function locate(){
+  if(inFlight) return;
+  inFlight = true; setLoading(true);
+  try{
+    const center = await getPosition();
+    lastCenter = center;
+    map.setView([center.lat,center.lon], 15);
+    if(youMarker) map.removeLayer(youMarker);
+    youMarker = L.marker([center.lat,center.lon],{icon:youIcon}).addTo(map).bindPopup('現在地');
+    const els = await fetchCrossings(center.lat, center.lon, currentRadius());
+    render(els, center);
+  }catch(err){
+    let msg = '現在地を取得できませんでした。';
+    if(err && err.code===1) msg += '\n位置情報の利用が許可されていません(ブラウザの設定で許可してください)。';
+    else if(err && err.code===2) msg += '\n位置を特定できませんでした。電波状況などをご確認ください。';
+    else if(err && err.code===3) msg += '\n時間内に取得できませんでした。もう一度お試しください。';
+    else if(err && err.message) msg += '\n'+err.message;
+    if(!window.isSecureContext) msg += '\n\n※ 現在地機能は https または localhost でのみ動作します。file:// で開いている場合はサーバー経由で開いてください。';
+    alert(msg);
+  }finally{
+    inFlight = false; setLoading(false);
+  }
+}
+
+goBtn.addEventListener('click', search);
+locateBtn.addEventListener('click', locate);
+qEl.addEventListener('keydown', e=>{ if(e.key==='Enter') search(); });
+radiusEl.addEventListener('input', ()=>{ radiusValEl.textContent = radiusEl.value + ' km'; }); // 表示を即時更新
+radiusEl.addEventListener('change', scheduleReSearch); // 指を離したら再検索(デバウンス+連打防止)
+
+// PWA: Service Worker 登録(https/localhost のみ有効)
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+}
+</script>
+</body>
+</html>

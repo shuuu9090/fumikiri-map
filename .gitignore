@@ -1,0 +1,5 @@
+# OS
+.DS_Store
+
+# Claude Code のローカルデータ(公開しない)
+.claude/
