@@ -692,7 +692,7 @@ document.querySelectorAll('.seg').forEach(seg=>{
 
 // フォーム+座標 → OSMノート本文を生成
 function buildNote(){
-  const lines = ['ここに踏切があります(踏切マップからの報告)。'];
+  const lines = ['ここに踏切があります。'];
   const type = segValue('segType'); if(type) lines.push('種別:' + type);
   const line = fLine.value.trim();  if(line) lines.push('路線:' + line);
   const bar = segValue('segBarrier'); if(bar) lines.push('遮断機:' + bar);
