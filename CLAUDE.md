@@ -41,6 +41,12 @@
 - 路線名・踏切名の表示(リストカード/ポップアップ)
 - PWA化(ホーム画面に追加・オフライン起動)
 - 外部API保護(上記セクション)
+- **OSMへの踏切報告機能**(地図右上「＋ 踏切を報告」)
+  - 地図タップ→ドラッグ可能なアンバー色ピンで正確な位置を指定
+  - スマホ対応のため2段UI:最初は下部パネルを`compact`(位置調整・地図が見える)→「次へ」でフォーム展開
+  - フォーム:種別(歩行者用/車道用)・路線(入力)・遮断機(有/無)・警報機(有/無)・踏切名(任意)→ OSMノート本文を自動生成
+  - **アプリからは書き込まない**。生成メモをクリップボードへコピーし、`https://www.openstreetmap.org/note/new#map=18/lat/lon&layers=N` を開く導線(スパム責任なし・キー不要)
+  - ※ OSMノートURLは本文の自動入力に非対応 → 「コピー→貼り付け」方式が前提
 
 ## デザイン方針(2026-05 更新:鉄道テーマ→洗練ダークUIへ転換)
 - Palantir(Foundry/Gotham)系の洗練されたダークUIを基調にする
@@ -57,3 +63,10 @@
 - **必ずローカルHTTPサーバ経由で開く**: `python3 -m http.server 8000` → `http://localhost:8000/`
 - `file://` ではSafariがAPI通信(fetch)をブロックする/Service WorkerとGeolocationも動かない。Chromeのfile://でも現在地・PWAは不可
 - ビルドは不要(静的ファイルをそのまま配信)
+
+## 公開・デプロイ
+- 公開URL: https://shuuu9090.github.io/fumikiri-map/ (GitHub Pages・https)
+- リポジトリ: `github.com/shuuu9090/fumikiri-map`(main / root を Pages ソースに設定)
+- **更新手順**: `git add -A && git commit -m "..." && git push` → push で自動再ビルド・反映(数十秒〜数分)
+- 認証は gh CLI(キーチェーン)で設定済み。`git push` でPAT再入力は不要
+- `.claude/` は `.gitignore` で除外(公開しない)
